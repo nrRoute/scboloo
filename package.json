@@ -17,7 +17,7 @@
     "pack:chrome": "./node_modules/.bin/run-s pack:chrome:keygen pack:chrome:zip",
     "pack:chrome:zip": "./node_modules/.bin/crx pack -p tmp/key.pem -o packages/scboloo.crx --zip-output packages/scboloo.chrome.zip dist/chrome",
     "pack:chrome:keygen": "if [ ! -f tmp/key.pem ] ; then ./node_modules/.bin/crx keygen ./tmp ; fi",
-    "pack:firefox": "./node_modules/.bin/web-ext build -s dist/firefox -a packages"
+    "pack:firefox": "./scripts/pack-firefox.sh"
   },
   "devDependencies": {
     "ava": "^0.19.1",

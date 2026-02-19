@@ -1,15 +1,25 @@
-import MessageListener from './libs/MessageListener'
-import {response as getImagesOnPage} from './libs/getImagesOnPage'
-import {response as getPageTitle} from './libs/getPageTitle'
+import MessageListener from "./libs/MessageListener";
+import { response as getImagesOnPage } from "./libs/getImagesOnPage";
+import { response as getPageTitle } from "./libs/getPageTitle";
 
-const onMessageListener = new MessageListener('content')
+const onMessageListener = new MessageListener("content");
 
-onMessageListener.add('getImages', async (message, sender, sendResponse) => {
-  sendResponse(getImagesOnPage())
-})
+onMessageListener.add("getImages", async (message, sender, sendResponse) => {
+  sendResponse(getImagesOnPage());
+});
 
-onMessageListener.add('getPageTitle', async (message, sender, sendResponse) => {
-  sendResponse(getPageTitle())
-})
+onMessageListener.add("getPageTitle", async (message, sender, sendResponse) => {
+  sendResponse(getPageTitle());
+});
 
-chrome.runtime.onMessage.addListener(onMessageListener.listen.bind(onMessageListener))
+onMessageListener.add(
+  "getQuotedText",
+  async (message, sender, sendResponse) => {
+    const text = window.getSelection().toString() || "";
+    sendResponse(text ? `> ${text}` : "");
+  },
+);
+
+chrome.runtime.onMessage.addListener(
+  onMessageListener.listen.bind(onMessageListener),
+);

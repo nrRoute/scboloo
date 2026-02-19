@@ -1,23 +1,68 @@
-import getActiveTab from './getActiveTab'
+import getActiveTab from "./getActiveTab";
 
-export const request = () => new Promise(async (resolve) => {
-  const activeTab = await getActiveTab()
-  chrome.tabs.sendMessage(activeTab.id, {
-    target: 'content',
-    action: 'getImages'
-  }, (response) => {
-    resolve(response)
-  })
-})
+const sendGetImagesMessage = async (tabId) => {
+  return await new Promise((resolve) => {
+    try {
+      chrome.tabs.sendMessage(
+        tabId,
+        {
+          target: "content",
+          action: "getImages",
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            resolve(null);
+            return;
+          }
+          resolve(Array.isArray(response) ? response : []);
+        },
+      );
+    } catch (e) {
+      resolve(null);
+    }
+  });
+};
+
+export async function request() {
+  const activeTab = await getActiveTab();
+  if (!(activeTab && activeTab.id)) return [];
+
+  const primary = await sendGetImagesMessage(activeTab.id);
+  if (primary !== null) return primary;
+
+  // const injected = await injectContentScript(activeTab.id);
+  // if (!injected) return [];
+
+  const fallback = await sendGetImagesMessage(activeTab.id);
+  return fallback !== null ? fallback : [];
+}
+
+const resolveUrl = (rawUrl) => {
+  if (!rawUrl || typeof rawUrl !== "string") return "";
+  try {
+    return new URL(rawUrl.trim(), window.location.href).href;
+  } catch (e) {
+    return "";
+  }
+};
+
+const addImage = (images, rawUrl) => {
+  const url = resolveUrl(rawUrl);
+  if (!url) return;
+  if (/^javascript:/i.test(url)) return;
+  images.add(url);
+};
 
 export const response = () => {
-  return Array.from(
-    document.querySelectorAll('meta[property="og:image"]')
-  )
-  .concat(
-    Array.from(document.querySelectorAll('img'))
-  )
-  .map(
-    (tag) => tag && (tag.content || tag.src)
-  )
-}
+  const images = new Set();
+
+  Array.from(document.querySelectorAll('meta[property="og:image"]')).forEach(
+    (tag) => addImage(images, tag.content),
+  );
+
+  Array.from(document.querySelectorAll("img")).forEach((img) => {
+    addImage(images, img.currentSrc || img.src);
+  });
+
+  return Array.from(images);
+};

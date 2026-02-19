@@ -1,0 +1,80 @@
+*,
+:before,
+:after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  width: 360px;
+  padding: 14px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+}
+
+input,
+textarea {
+  padding: 8px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  padding: 9px;
+  cursor: pointer;
+  background: #0f172a;
+  color: #f8fafc;
+  border: 0;
+  font-weight: 600;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+#imageList {
+  height: 380px;
+  overflow-y: scroll;
+}
+#imageList.disabled {
+  overflow-y: hidden;
+}
+#imageList.disabled > img {
+  opacity: 0.4;
+}
+#imageList.disabled > img.selected {
+  border: rgb(77, 94, 102) solid 4px;
+  margin: 1px;
+}
+#imageList > img {
+  max-height: 150px;
+  margin: 5px;
+}
+#imageList > img.selected {
+  border: rgb(34, 143, 198) solid 4px;
+  margin: 1px;
+}

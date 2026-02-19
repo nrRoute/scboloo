@@ -1,60 +1,32 @@
-<html>
+<!DOCTYPE html>
+<html lang="ja">
   <head>
-    <style>
-      body {
-        padding: 0;
-        margin: 0;
-        width: 300px;
-        height: 500px;
-      }
-      #imageList {
-        height: 380px;
-        overflow-y: scroll;
-      }
-      #imageList.disabled {
-        overflow-y: hidden;
-
-      }
-      #imageList.disabled > img {
-        opacity: .4;
-      }
-      #imageList.disabled > img.selected {
-        border: rgb(77, 94, 102) solid 4px;
-        margin: 1px;
-      }
-      #imageList > img {
-        max-height: 150px;
-        margin: 5px;
-      }
-      #imageList > img.selected {
-        border: rgb(34, 143, 198) solid 4px;
-        margin: 1px;
-      }
-      #scrapboxText {
-        width: 100%;
-        height: 100px;
-      }
-      #createButton {
-        width: 100%;
-        height: 40px;
-      }
-      #projectSelect {
-        width: 250px;
-      }
-      #pageTitle {
-        width: 100%;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scboloo</title>
+    <link rel="stylesheet" href="/popup.css" />
   </head>
   <body>
-    <span>Select Image to use as page symbol</span><br />
-    <label><input type='checkbox' id='dontUseImageCheckBox' />Don't use image</label>
-    <div id='imageList'>
-    </div>
-    Project <select id='projectSelect'></select><br />
-    <input type='text' id='pageTitle' />
-    <textarea id='scrapboxText' placeholder='Write page body text'></textarea><br />
-    <button id='createButton'>Create Page</button>
+    <main class="container">
+      <form id="converterForm">
+        <label for="imageList">Select image to use as page symbol</label>
+        <div id="imageList"></div>
+
+        <label for="dontUseImageCheckBox">Don't use image</label>
+        <input type="checkbox" id="dontUseImageCheckBox" />
+
+        <label for="projectSelect">Project</label>
+        <select id="projectSelect"></select>
+
+        <label for="pageTitle">タイトル</label>
+        <input type="text" id="pageTitle" autocomplete="off" required />
+
+        <label for="scrapboxText">メモ</label>
+        <textarea id="scrapboxText" rows="5" placeholder='Write page body text'></textarea>
+
+        <button id='createButton'>Create Page</button>
+      </form>
+    </main> 
     <script src='/popup.js'></script>
   </body>
 </html>
