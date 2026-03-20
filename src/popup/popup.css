@@ -9,7 +9,7 @@ body {
 }
 
 .container {
-  width: 360px;
+  width: 320px;
   padding: 14px;
 }
 
@@ -59,6 +59,7 @@ button:hover {
 #imageList {
   height: 380px;
   overflow-y: scroll;
+  border: 1px solid #cbd5e1;
 }
 #imageList.disabled {
   overflow-y: hidden;
@@ -77,4 +78,11 @@ button:hover {
 #imageList > img.selected {
   border: rgb(34, 143, 198) solid 4px;
   margin: 1px;
+}
+
+#statusMessage {
+  margin: 0;
+  min-height: 1.2em;
+  color: #b91c1c;
+  font-size: 12px;
 }

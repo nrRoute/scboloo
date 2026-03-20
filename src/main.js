@@ -1,13 +1,55 @@
 import config from "./config";
 import uploadGyazo from "./libs/uploadGyazo";
+import uploadScrapboxFile from "./libs/uploadScrapboxFile";
 import createScrapboxPage from "./libs/createScrapboxPage";
 import MessageListener from "./libs/MessageListener";
 import { request as getImagesOnPage } from "./libs/getImagesOnPage";
 import { request as getPageTitle } from "./libs/getPageTitle";
 import getActiveTab from "./libs/getActiveTab";
 
+const openComposerInTab = () => {
+  const url = chrome.runtime.getURL("/popup/popup.html");
+  chrome.tabs.create({ url });
+};
+
+const openComposerFromAction = async () => {
+  const browserApi =
+    typeof globalThis !== "undefined" && globalThis.browser
+      ? globalThis.browser
+      : null;
+
+  try {
+    if (
+      browserApi &&
+      browserApi.sidebarAction &&
+      browserApi.sidebarAction.open
+    ) {
+      await browserApi.sidebarAction.open();
+      return;
+    }
+  } catch (e) {}
+
+  try {
+    if (chrome.sidebarAction && chrome.sidebarAction.open) {
+      await new Promise((resolve, reject) => {
+        chrome.sidebarAction.open(() => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve();
+        });
+      });
+      return;
+    }
+  } catch (e) {}
+
+  openComposerInTab();
+};
+
 const resolveMimeType = (srcUrl, contentType) => {
   if (contentType) return contentType.split(";")[0];
+  if (/svg($|[?#])/i.test(srcUrl)) return "image/svg+xml";
   if (/png($|[?#])/i.test(srcUrl)) return "image/png";
   if (/jpe?g($|[?#])/i.test(srcUrl)) return "image/jpeg";
   if (/gif($|[?#])/i.test(srcUrl)) return "image/gif";
@@ -25,14 +67,26 @@ const toBase64 = (buffer) => {
   return btoa(binary);
 };
 
-const convertDataUrl = async (srcUrl) => {
+const fetchImageSource = async (srcUrl) => {
   const response = await fetch(srcUrl);
   const buffer = await response.arrayBuffer();
   const mimeType = resolveMimeType(
     srcUrl,
     response.headers.get("content-type"),
   );
+  return { buffer, mimeType };
+};
+
+const toDataUrl = (buffer, mimeType) => {
   return `data:${mimeType};base64,${toBase64(buffer)}`;
+};
+
+const isSvgImage = (imageUrl, mimeType = "") => {
+  return (
+    /^data:image\/svg\+xml/i.test(imageUrl) ||
+    /^image\/svg\+xml/i.test(mimeType) ||
+    /\.svg($|[?#])/i.test(imageUrl)
+  );
 };
 
 const captureVisibleTab = () =>
@@ -61,23 +115,63 @@ onMessageListener.add("fetchApi", async (message, sender, sendResponse) => {
 onMessageListener.add(
   "createScrapboxPage",
   async (message, sender, sendResponse) => {
-    let { text, title, imageUrl, projectName } = message;
-    const originalTitle = await getPageTitle();
-    const tab = await getActiveTab();
-    const body = [`[${originalTitle} ${tab.url}]`];
-    if (imageUrl) {
-      if (/^https?/.test(imageUrl)) {
-        imageUrl = await convertDataUrl(imageUrl);
+    try {
+      let { text, title, imageUrl, projectName } = message;
+      const originalTitle = await getPageTitle();
+      const tab = await getActiveTab();
+      const body = [`[${originalTitle} ${tab.url}]`];
+      if (imageUrl) {
+        try {
+          let responseURL;
+          if (/^https?/.test(imageUrl)) {
+            const imageSource = await fetchImageSource(imageUrl);
+            if (isSvgImage(imageUrl, imageSource.mimeType)) {
+              responseURL = await uploadScrapboxFile({
+                projectName,
+                sourceUrl: imageUrl,
+                mimeType: imageSource.mimeType,
+                arrayBuffer: imageSource.buffer,
+              });
+            } else {
+              const gyazoImage = toDataUrl(
+                imageSource.buffer,
+                imageSource.mimeType,
+              );
+              responseURL = await uploadGyazo(gyazoImage, tab);
+            }
+          } else if (isSvgImage(imageUrl)) {
+            responseURL = await uploadScrapboxFile({
+              projectName,
+              sourceUrl: imageUrl,
+              mimeType: "image/svg+xml",
+              dataUrl: imageUrl,
+            });
+          } else {
+            responseURL = await uploadGyazo(imageUrl, tab);
+          }
+          body.push(`[${responseURL}]`);
+        } catch (e) {
+          sendResponse({
+            ok: false,
+            error:
+              "画像のアップロードに失敗したため、ページは作成しませんでした。SVG画像の場合はScrapboxへのアップロードも試行しました。",
+          });
+          return;
+        }
       }
-      const responseURL = await uploadGyazo(imageUrl, tab);
-      body.push(`[${responseURL} ${tab.url}]`);
+      body.push(text);
+      await createScrapboxPage({
+        title,
+        projectName,
+        body: body.join("\n"),
+      });
+      sendResponse({ ok: true });
+    } catch (e) {
+      sendResponse({
+        ok: false,
+        error: "ページ作成に失敗しました。",
+      });
     }
-    body.push(text);
-    createScrapboxPage({
-      title,
-      projectName,
-      body: body.join("\n"),
-    });
   },
 );
 onMessageListener.add(
@@ -126,3 +220,9 @@ onMessageListener.add("getPageTitle", async (message, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener(
   onMessageListener.listen.bind(onMessageListener),
 );
+
+if (chrome.action && chrome.action.onClicked) {
+  chrome.action.onClicked.addListener(() => {
+    openComposerFromAction();
+  });
+}

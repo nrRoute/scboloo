@@ -9,13 +9,13 @@
   <body>
     <main class="container">
       <form id="converterForm">
-        <label for="imageList">Select image to use as page symbol</label>
+        <label for="imageList">ページ画像</label>
         <div id="imageList"></div>
 
-        <label for="dontUseImageCheckBox">Don't use image</label>
+        <label for="dontUseImageCheckBox">画像を使わない</label>
         <input type="checkbox" id="dontUseImageCheckBox" />
 
-        <label for="projectSelect">Project</label>
+        <label for="projectSelect">プロジェクト</label>
         <select id="projectSelect"></select>
 
         <label for="pageTitle">タイトル</label>
@@ -24,7 +24,8 @@
         <label for="scrapboxText">メモ</label>
         <textarea id="scrapboxText" rows="5" placeholder='Write page body text'></textarea>
 
-        <button id='createButton'>Create Page</button>
+        <button id='createButton'>ページ作成</button>
+        <p id="statusMessage" role="alert" aria-live="polite"></p>
       </form>
     </main> 
     <script src='/popup.js'></script>

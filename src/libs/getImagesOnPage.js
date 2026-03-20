@@ -28,13 +28,7 @@ export async function request() {
   if (!(activeTab && activeTab.id)) return [];
 
   const primary = await sendGetImagesMessage(activeTab.id);
-  if (primary !== null) return primary;
-
-  // const injected = await injectContentScript(activeTab.id);
-  // if (!injected) return [];
-
-  const fallback = await sendGetImagesMessage(activeTab.id);
-  return fallback !== null ? fallback : [];
+  return primary !== null ? primary : [];
 }
 
 const resolveUrl = (rawUrl) => {
