@@ -9,7 +9,7 @@ body {
 }
 
 .container {
-  width: 320px;
+  width: 300px;
   padding: 14px;
 }
 
@@ -57,7 +57,7 @@ button:hover {
 }
 
 #imageList {
-  height: 380px;
+  height: 320px;
   overflow-y: scroll;
   border: 1px solid #cbd5e1;
 }
